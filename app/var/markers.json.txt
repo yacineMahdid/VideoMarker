@@ -1,0 +1,12 @@
+{
+        markerStyle: {
+          'width':'10px',
+          'background-color': 'Blue'
+        },
+          markers: [
+                {time: 10, text: "SM1"},
+                {time: 15, text: "SM2"},
+                {time: 20, text: "SM3"},
+                {time: 25, text: "SM4"},
+          ]
+      }

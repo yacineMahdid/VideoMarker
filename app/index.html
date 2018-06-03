@@ -1,0 +1,211 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+    <title>Test Video</title>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <script src="js/jquery-2.0.3.min.js"></script>
+    <script src="js/video.min.js"></script>
+    <script src="js/videojs-markers.min.js"></script>
+    <link rel = "stylesheet"
+       href = "./bower_components/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/video-js.min.css"/>
+    <link rel="stylesheet" href="css/videojs.markers.min.css"/>
+    <link rel="stylesheet" href="css/custom.css"/>
+  </head>
+  <body>
+    <div class="container">
+    <div class="row">
+      <video
+        id="example_video_1"
+        class="video-js vjs-default-skin col-md-12 col-lg-12"
+        controls
+        preload="auto"
+        autoplay
+        width="640"
+        height="360"
+        data-setup='{"width": 640, "height": 460,
+        "playbackRates": [0.25, 0.5, 0.75, 1, 1.5, 2] }'>
+
+          <!-- THIS IS WHERE YOU UPDATE THE VIDEO YOU WANT-->
+          <source id="video-source" src=".\videos\small.mp4" type="video/mp4"/>
+          <!------------------------------------------------>
+
+
+    </video>
+  </div>
+  <div class="row controls">
+  <div class="col-md-4 col-lg-4 button-info-container"><button id="start-time" class="btn btn-primary video-button" onclick="getStartTime();">start-time</button></div>
+  <div class="col-md-4 col-lg-4 button-info-container"><button id="load-video" class="btn btn-primary video-button" onclick="loadVideo();">load-video</button></div>
+  <div class="col-md-4 col-lg-4 button-info-container"><button id="load-markers" class="btn btn-primary video-button" onclick="loadMarkers();">load-markers</button></div>
+  <div id="start-time-tag" class="col-md-4 col-lg-4 information-line"> start time</div>
+  <div id="video-name-tag" class="col-md-4 col-lg-4 information-line">video name</div>
+  <div id="markers-tag" class="col-md-4 col-lg-4 information-line">markers tag</div>
+</div>
+</div>
+  </body>
+  <script type="text/javascript">
+    onkeydown = key_seek;
+    // load video object
+    var video = videojs('example_video_1');
+    var pathname = "";
+
+    ///////////////THIS IS WHERE YOU UPDATE THE MARKERS//////////////////////
+    /////////////////////////////////////////////////////////////////////////
+    //load markers (in seconds)//////////////////////////////////////////////
+    // Participant = marker Red
+    // Care-giver = marker Blue
+    video.markers({
+      markers:[
+        {time: 1,
+         text: "test",
+         duration: 1}
+      ]
+    });
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
+    //Helper functions
+    function togglePlay(){
+      if (video.paused()) {
+        video.play();
+      }
+      else {
+        video.pause();
+      }
+    }
+
+
+    function key_seek(e){
+      var offset = 15; //TO CHANGE IF TOO BIG
+      var current_position = video.currentTime();
+      e = window.event? event : e;
+      if(e.keyCode == '37' && e.ctrlKey){
+           video.markers.prev();
+      }
+      else if(e.keyCode == '37' && e.shiftKey){
+        video.currentTime(current_position-0.2)
+      }
+      else if(e.keyCode == '39' && e.ctrlKey){
+          video.markers.next();
+      }
+      else if(e.keyCode == '39' && e.shiftKey){
+        video.currentTime(current_position+0.2)
+      }
+      else if (e.keyCode == '37') {
+         // left arrow
+         video.markers.prev();
+         var tentative_time = video.currentTime() - offset;
+         if(tentative_time < 0){
+           tentative_time = 0;
+         }
+        video.currentTime(tentative_time);
+      }
+      else if (e.keyCode == '39') {
+         // right arrow
+         video.markers.next();
+         var tentative_time = video.currentTime() - offset;
+         if(tentative_time < 0){
+           tentative_time = 0;
+         }
+        video.currentTime(tentative_time);
+      }
+      else if(e.key === ' ' || e.key === 'Spacebar'){
+        togglePlay();
+        return;
+      }
+      else{
+        return;
+      }
+
+    }
+
+    function getStartTime(){
+      const exec = require('child_process').exec;
+      function execute(command, callback) {
+          exec(command, (error, stdout, stderr) => {
+              callback(stdout);
+          });
+      };
+
+      // call the function
+      execute('python -c "import time; print(int(time.time()*1000))"', (output) => {
+        document.getElementById("start-time-tag").innerHTML = output;
+      });
+      document.getElementById("start-time").classList.add('btn-success');
+      document.getElementById("start-time").classList.remove('btn-primary');
+    }
+
+
+    function loadVideo(){
+      const {dialog} = require('electron').remote;
+      dialog.showOpenDialog(function (fileNames) {
+
+        if (fileNames === undefined){
+          pathname = "";
+          return;
+        }
+
+        pathname = fileNames[0];
+        filename = pathname.split("\\");
+        filename = filename[filename.length - 1];
+        path_and_extension = pathname.split(".");
+        base_path = path_and_extension[0];
+        extension = path_and_extension[1];
+        if(extension.toLowerCase() == "mpg"){
+          new_pathname = base_path.concat(".mp4");
+          document.getElementById("video-name-tag").innerHTML = "CONVERTING VIDEO...";
+          const exec = require('child_process').exec;
+          function execute(command, callback) {
+              exec(command, (error, stdout, stderr) => {
+                  callback(stdout);
+              });
+          }
+          execute(`.\\videos\\ffmpeg -i "${pathname}" -c:v libx264 -ac 1 -preset:v ultrafast "${new_pathname}"`, (output) => {
+            document.getElementById("video-name-tag").innerHTML = "File converted, load .mp4 please.";
+            document.getElementById("video-source").src = new_pathname;
+            document.getElementById("example_video_1_html5_api").src = new_pathname;
+          });
+
+        }else{
+          document.getElementById("video-name-tag").innerHTML = filename;
+          document.getElementById("video-source").src = pathname;
+          document.getElementById("example_video_1_html5_api").src = pathname;
+          document.getElementById("load-video").classList.add('btn-success');
+          document.getElementById("load-video").classList.remove('btn-primary');
+        }
+       });
+    }
+
+    function loadMarkers(){
+      const {dialog} = require('electron').remote;
+      dialog.showOpenDialog(function (fileNames) {
+
+        if (fileNames === undefined){
+          return;
+        }
+
+        var marker_path = fileNames[0];
+        var filename = marker_path.split("\\");
+        var filename = filename[filename.length - 1];
+        document.getElementById("markers-tag").innerHTML = marker_path;
+        // Declare variables
+        var fs = require('fs');
+
+        // Read the file and send to the callback
+        fs.readFile(marker_path, "utf-8",handleFile)
+        // Write the callback function
+        function handleFile(err, data) {
+            if (err) throw err
+          var obj =  JSON.parse(data);
+          document.getElementById("markers-tag").innerHTML = "<span style='color:red'>Participant</span> and <span style='color:blue'>Care-giver</span>";
+          video.markers.reset(obj);
+          document.getElementById("load-markers").classList.add('btn-success');
+          document.getElementById("load-markers").classList.remove('btn-primary');
+        };
+  });
+}
+
+  </script>
+</html>

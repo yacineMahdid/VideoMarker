@@ -1,0 +1,42 @@
+
+.marker-red {
+  background-color: red !important;
+border-radius: 10% !important;
+}
+.marker-blue {
+  background-color: blue !important;
+  border-radius: 100% !important;}
+
+p{
+  text-align: center;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+
+.video-js {
+    min-height: 80%;
+}
+
+.button-info-container{
+  text-align: center;
+}
+
+.video-button{
+  text-align: center;
+      min-height: 10%;
+}
+
+.information-line{
+  text-align: center;
+  padding-top:2%;
+  min-height: 10%;
+}
+
+.row.controls{
+  padding-top:1.5%;
+  min-height:20%;
+}
